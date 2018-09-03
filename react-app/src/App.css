@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css?family=Lobster|Oleo+Script|Oleo+Script+Swash+Caps|Concert+One');
+
+/* .App {
+  text-align: center;
+} */
+
+:root {
+  --dark-color: #222;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/*
+.App-header {
+  background-color: var(--dark-color);
+  padding: 0 20px;
+  color: white;
+
+  font-size: 32px;
+  font-family: 'Concert One', cursive;
+}
+
+.App-header h1 {
+  font-weight: normal;
+  padding: 20px 0;
+  margin: 0;
+}
+*/
+
+table.info tbody {
+  display: block;
+  border-collapse: separate;
+  border-spacing: 4px;
+  /* border: 2px solid black; */
+  /* border-bottom: 1px solid black; */
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.expand-collapse {
+  font-size: small;
+  cursor: pointer;
+}
+
+/* Similar to MetaMask */
+.copy-hex {
+  cursor: pointer;
+}
+.copy-hex:hover {
+  background-color: #e6e4e6;
+}
+.copy-hex:active {
+  background-color: #d7d5d8;
+}
+
+.wooden-bingo-chip {
+  --border-width: 6px;
+  --outer-radius: 38px;
+  display: inline-block;
+  width: calc(2 * (var(--outer-radius) - var(--border-width)));
+  height: calc(2 * (var(--outer-radius) - var(--border-width)));
+  border-radius: var(--outer-radius);
+  border: var(--border-width) solid white;
+  text-align: center;
+  margin: 5px;
+  transform: rotate(0deg);
+}
+
+
+.box, .box-contents, .box > main {
+  --spacing: 10px;
+  margin: 0;
+  padding: 0;
+}
+
+.box {
+  margin: var(--spacing) 0;
+}
+
+.box-contents, .box > main {
+  padding: var(--spacing);
+}
+
+.box {
+  border: 2px solid var(--dark-color);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.box h1, .box header {
+  background-color: var(--dark-color);
+  padding: 2px var(--spacing);
+  margin: 0;
+  color: white;
+
+  font-size: 24px;
+  /* font-family: 'Lobster', cursive; */
+  /* font-family: 'Oleo Script', cursive; */
+  /* font-family: 'Oleo Script Swash Caps', cursive; */
+  font-family: 'Concert One', cursive;
+  font-weight: normal;
+}
+
+.box.App {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
+
+.box.App > header {
+  padding: calc(2 * var(--spacing)) var(--spacing);
+  font-size: 48px;
+  margin: 0;
+  /* display: none; */
+}

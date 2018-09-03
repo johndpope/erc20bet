@@ -1,0 +1,26 @@
+{
+  "extends": ["airbnb-base", "prettier"],
+  "plugins": ["prettier"],
+  "rules": {
+    "no-var": "error",
+    "prettier/prettier": "error",
+    "linebreak-style": "off",
+    "no-restricted-syntax": "off",
+    "no-plusplus": "off",
+    "no-unused-vars": "warn",
+    "no-else-return": "off",
+    "no-continue": "off",
+    "yoda": "off",
+    "func-names": ["off"]
+  },
+  "globals": {
+    "artifacts": false,
+    "assert": true,
+    "contract": true,
+    "web3": true,
+    "expect": true
+  },
+  "env": {
+    "mocha": true
+  }
+}

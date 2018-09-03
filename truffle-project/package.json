@@ -1,0 +1,59 @@
+{
+  "name": "erc20-bet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test --migrations_directory no-migrations",
+    "test:exchange": "truffle test --migrations_directory no-migrations ./test/Erc20BetExchange.test.js",
+    "test:merkle": "truffle test --migrations_directory no-migrations ./test/lib/merkle/**",
+    "test:tokens": "truffle test --migrations_directory no-migrations ./test/tokens/**",
+    "clean": "rimraf ./build/contracts/*",
+    "ganache": "ganache-cli --deterministic --gasLimit 0xfffffffffff --defaultBalanceEther 1000000",
+    "ganache-periodic": "ganache-cli --deterministic --gasLimit 0xfffffffffff --defaultBalanceEther 1000000 --blockTime 5",
+    "compile": "truffle compile",
+    "premigrate": "rimraf ./build/contracts/*",
+    "migrate": "truffle migrate --reset",
+    "lint": "solium -d .",
+    "eip712": "truffle exec ./Example.js",
+    "fiddle": "truffle exec ./fiddle.js"
+  },
+  "keywords": [
+    "ethereum",
+    "betting",
+    "casino",
+    "token",
+    "erc-20"
+  ],
+  "author": "Edward Grech <dwardu@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-register": "^6.26.0",
+    "bignumber.js": "^7.2.1",
+    "bip39": "^2.5.0",
+    "bn-chai": "^1.0.1",
+    "bn.js": "^4.11.8",
+    "chai": "^4.1.2",
+    "chai-bignumber": "^2.0.2",
+    "chai-subset": "^1.6.0",
+    "eth-sig-util": "^2.0.2",
+    "ethereumjs-abi": "^0.6.5",
+    "ethereumjs-util": "^5.2.0",
+    "ethereumjs-wallet": "^0.6.2",
+    "ethjs-abi": "0.1.8",
+    "ganache-cli": "^6.1.8",
+    "openzeppelin-solidity": "1.12.0",
+    "prettier": "^1.14.2",
+    "rimraf": "^2.6.2",
+    "truffle": "^5.0.0-beta.0",
+    "web3": "^1.0.0-beta.35",
+    "web3-utils": "^1.0.0-beta.35"
+  }
+}
