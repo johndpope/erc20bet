@@ -110,7 +110,7 @@ npm install
 This will install all npm packages in the local node environment. Note that the project uses Truffle v5 beta, but it should not cause any issues as it is installed into the project, so it does not matter if on the same system there is Truffle v4 installed globally. Next run:
 
 ```bash
-npm run ganache-cli
+npm run ganache
 ```
 
 This will run the ganache-cli Ethereum development node on http://localhost:8545, so please ensure that this port is kept free.
