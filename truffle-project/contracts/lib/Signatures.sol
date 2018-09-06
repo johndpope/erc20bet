@@ -5,20 +5,26 @@ pragma solidity ^0.4.24;
 
 library Signatures {
 
+    using Signatures for Signatures.Signature;
+
     struct Signature {
         uint8 v;
         bytes32 r;
         bytes32 s;
     }
 
-    function isValid(Signature self, bytes32 hash, address supposedSigner) internal pure returns (bool) {
-        return supposedSigner == ecrecover(
-            // ECRecovery.toEthSignedMessageHash(hash),
-            hash,
+    function recoverSignerForHash(Signature self, bytes32 hash_) internal pure returns (address signer) {
+        return ecrecover(
+            // ECRecovery.toEthSignedMessageHash(hash_),
+            hash_,
             self.v,
             self.r,
             self.s
         );
+    }
+
+    function isValid(Signature self, bytes32 hash_, address supposedSigner) internal pure returns (bool) {
+        return self.recoverSignerForHash(hash_) == supposedSigner;
     }
 
     function isEmpty(Signature self) internal pure returns (bool) {

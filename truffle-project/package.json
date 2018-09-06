@@ -16,7 +16,7 @@
     "ganache-periodic": "ganache-cli --deterministic --gasLimit 0xfffffffffff --defaultBalanceEther 1000000 --blockTime 5",
     "compile": "truffle compile",
     "premigrate": "rimraf ./build/contracts/*",
-    "migrate": "truffle migrate --reset",
+    "migrate": "truffle migrate",
     "lint": "solium -d .",
     "eip712": "truffle exec ./Example.js",
     "fiddle": "truffle exec ./fiddle.js"
@@ -49,11 +49,11 @@
     "ethereumjs-wallet": "^0.6.2",
     "ethjs-abi": "0.1.8",
     "ganache-cli": "^6.1.8",
-    "openzeppelin-solidity": "1.12.0",
+    "openzeppelin-solidity": "github:dwardu/openzeppelin-solidity#feature/merkle-root",
     "prettier": "^1.14.2",
     "rimraf": "^2.6.2",
-    "truffle": "^5.0.0-beta.0",
+    "truffle": "^5.0.0-next.10",
     "web3": "^1.0.0-beta.35",
-    "web3-utils": "^1.0.0-beta.35"
+    "web3-utils": "^1.0.0-beta.36"
   }
 }

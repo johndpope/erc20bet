@@ -23,10 +23,11 @@ module.exports = {
   },
   // See http://solidity.readthedocs.io/en/develop/using-the-compiler.html#compiler-input-and-output-json-description
   optimizer: {
-    // // disabled by default
-    // enabled: true,
-    // // Optimize for how many times you intend to run the code.
-    // // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
+    // disabled by default
+    enabled: true,
+    // Optimize for how many times you intend to run the code.
+    // Lower values will optimize more for initial deployment cost, higher values will optimize more for high-frequency usage.
+    runs: 200
     // runs: 1000000
   }
 }
