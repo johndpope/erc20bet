@@ -4,6 +4,7 @@ pragma experimental "v0.5.0";
 import "openzeppelin-solidity/contracts/cryptography/MerkleTree.sol";
 
 import "./lib/safemath/SafeMathUint32.sol";
+import "./lib/CustomUint8ArrayEncoding.sol";
 
 import "./Bets.sol";
 import "./GameAction.sol";
@@ -53,14 +54,14 @@ contract BetMatching is GameAction, UsesRNG {
         /// so that we can look into GameOpened.outcomeProbs and construct the ranges.
         /// But this will suffice.
         /// ToDo: Use bytes instead
-        uint8[] outcomeSubscripts
+        bytes outcomeSubscripts
     );
 
     struct MatchedBet {
         Bets.Params params;
         address player;
         Signatures.Signature optionalSig;
-        uint8[] outcomeSubscripts;
+        bytes outcomeSubscripts;
     }
 
     struct Outcome {
@@ -114,13 +115,13 @@ contract BetMatching is GameAction, UsesRNG {
 
             pot = pot.safeAdd(betParams.stake);
 
-            uint8[] memory outcomeSubscripts = bet.outcomeSubscripts;
+            bytes memory outcomeSubscripts = bet.outcomeSubscripts;
 
             uint32 sumOfOutcomeProbs = 0;
 
             // Run first iteration outside the for-loop, so that
             // we can initialize precedingOutcomeSubscript
-            uint256 outcomeSubscript = outcomeSubscripts[ZERO_INDEX];
+            uint8 outcomeSubscript = uint8(outcomeSubscripts[ZERO_INDEX]);
             Outcome memory outcome = outcomes[outcomeSubscript];
             sumOfOutcomeProbs = sumOfOutcomeProbs.safeAdd(outcome.prob);
             outcome.sumOfBetPayouts = outcome.sumOfBetPayouts.safeAdd(betParams.payout);
@@ -128,7 +129,7 @@ contract BetMatching is GameAction, UsesRNG {
             uint256 precedingOutcomeSubscript = outcomeSubscript;
 
             for (j = ONE_INDEX; j < outcomeSubscripts.length; j++) {
-                outcomeSubscript = outcomeSubscripts[j];
+                outcomeSubscript = uint8(outcomeSubscripts[j]);
                 require(precedingOutcomeSubscript < outcomeSubscript, REASON_BET_OUTCOME_DUPLICATE_SUBSCRIPTS);
 
                 outcome = outcomes[outcomeSubscript];
@@ -176,9 +177,6 @@ contract BetMatching is GameAction, UsesRNG {
         uint32[] outcomeProbs
     );
 
-    function bytes32ToUint8Array(bytes32 encoded) internal pure returns (uint8[] decoded) {
-        return new uint8[](0);
-    }
 
     function restructureMatchedBet(IERC20 token, uint256[10] betValues) internal pure returns (MatchedBet bet) {
         return MatchedBet({
@@ -196,7 +194,7 @@ contract BetMatching is GameAction, UsesRNG {
                 r: bytes32(betValues[7]),
                 s: bytes32(betValues[8])
             }),
-            outcomeSubscripts: bytes32ToUint8Array(bytes32(betValues[9]))
+            outcomeSubscripts: CustomUint8ArrayEncoding.decodeBytes32(bytes32(betValues[9]))
         });
     }
 
@@ -364,10 +362,10 @@ contract BetMatching is GameAction, UsesRNG {
             // ToDo: Cache these
             bytes32 betId = bet.params.getIdForPlayer(bet.player);
 
-            uint8[] memory outcomeSubscripts = bet.outcomeSubscripts;
+            bytes memory outcomeSubscripts = bet.outcomeSubscripts;
 
             for (uint256 j = 0; j < outcomeSubscripts.length; j++) {
-                Outcome memory outcome = outcomes[outcomeSubscripts[j]];
+                Outcome memory outcome = outcomes[uint8(outcomeSubscripts[j])];
                 ticketHashes[k++] = computeTicketHash({
                     player: bet.player,
                     minResult: outcome.minResult,
