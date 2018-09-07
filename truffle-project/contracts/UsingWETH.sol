@@ -4,7 +4,7 @@ pragma experimental "v0.5.0";
 import "./tokens/WrappedETHToken.sol";
 
 
-contract UsesWETH {
+contract UsingWETH {
 
     WrappedETHToken public storedWETHToken;
 

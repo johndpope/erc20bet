@@ -5,7 +5,7 @@ import "./rng/IRNGFactory.sol";
 import "./rng/IRNGClient.sol";
 
 
-contract UsesRNG is IRNGClient {
+contract UsingRNG is IRNGClient {
 
     IRNG public storedRNG;
 

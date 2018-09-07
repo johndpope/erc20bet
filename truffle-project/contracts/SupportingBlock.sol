@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import "./Base.sol";
+import "./UsingBetStorage.sol";
 
 
-contract BetBlockage is Base {
+contract SupportingBlock is UsingBetStorage {
 
     string constant REASON_ONLY_UNKNOWN_BET_CAN_BE_BLOCKED = "REASON_ONLY_UNKNOWN_BET_CAN_BE_BLOCKED";
     

@@ -31,3 +31,20 @@ contract A {
 }
 
 ```
+
+## Named parameters
+
+Where possible, we use named parameters in function calls, especially where it is simple to make a grave mistake, e.g.
+
+```solidity
+token.transferFrom({
+    _from: bet.owner,
+    _to: address(this),
+    _value: bet.stake
+}),
+```
+
+## Prefixes
+
+externalXXX
+safeXXX

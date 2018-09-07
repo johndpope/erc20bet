@@ -1,10 +1,14 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import "./Base.sol";
+import "openzeppelin-solidity/contracts/cryptography/MerkleTree.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 
 
-contract GameAction is Base {
+contract UsingGameStorage {
+
+    using SafeERC20 for IERC20;
 
     enum GameState {
         Unknown,

@@ -3,15 +3,15 @@ pragma experimental "v0.5.0";
 
 import "openzeppelin-solidity/contracts/cryptography/MerkleTree.sol";
 
-import "./lib/safemath/SafeMathUint32.sol";
+import "./lib/SafeMathUint32.sol";
 import "./lib/CustomUint8ArrayEncoding.sol";
 
-import "./Bets.sol";
-import "./GameAction.sol";
-import "./UsesRNG.sol";
+import "./UsingBetStorage.sol";
+import "./UsingGameStorage.sol";
+import "./UsingRNG.sol";
 
 
-contract BetMatching is GameAction, UsesRNG {
+contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
 
     /// @dev Since for loops often run from i = 0 to n - 1, we create this constant
     /// so that when we start instead from i = ONE_INDEX, it is conspicuous.
@@ -58,10 +58,21 @@ contract BetMatching is GameAction, UsesRNG {
     );
 
     struct MatchedBet {
-        Bets.Params params;
         address player;
+
+        // Note: previously Bets.Params
+        IERC20 token;
+        uint256 stake;
+        uint256 payout;
+        uint32 prob;
+        uint256 expiry;
+        uint256 nonce;
+
         Signatures.Signature optionalSig;
         bytes outcomeSubscripts;
+
+        bytes32 cachedBetHash;
+        bytes32 cachedBetId;
     }
 
     struct Outcome {
@@ -108,12 +119,10 @@ contract BetMatching is GameAction, UsesRNG {
             MatchedBet memory bet = bets[i];
             require(precedingPlayer < bet.player, REASON_PLAYER_ZERO_OR_DUPLICATE);
 
-            Bets.Params memory betParams = bet.params;
+            require(0 < bet.prob, REASON_BET_IMPOSSIBLE);
+            require(bet.stake < bet.payout, REASON_BET_PAYOUT_NOT_LARGER_THAN_STAKE);
 
-            require(0 < betParams.prob, REASON_BET_IMPOSSIBLE);
-            require(betParams.stake < betParams.payout, REASON_BET_PAYOUT_NOT_LARGER_THAN_STAKE);
-
-            pot = pot.safeAdd(betParams.stake);
+            pot = pot.safeAdd(bet.stake);
 
             bytes memory outcomeSubscripts = bet.outcomeSubscripts;
 
@@ -124,7 +133,7 @@ contract BetMatching is GameAction, UsesRNG {
             uint8 outcomeSubscript = uint8(outcomeSubscripts[ZERO_INDEX]);
             Outcome memory outcome = outcomes[outcomeSubscript];
             sumOfOutcomeProbs = sumOfOutcomeProbs.safeAdd(outcome.prob);
-            outcome.sumOfBetPayouts = outcome.sumOfBetPayouts.safeAdd(betParams.payout);
+            outcome.sumOfBetPayouts = outcome.sumOfBetPayouts.safeAdd(bet.payout);
 
             uint256 precedingOutcomeSubscript = outcomeSubscript;
 
@@ -134,12 +143,12 @@ contract BetMatching is GameAction, UsesRNG {
 
                 outcome = outcomes[outcomeSubscript];
                 sumOfOutcomeProbs = sumOfOutcomeProbs.safeAdd(outcome.prob);
-                outcome.sumOfBetPayouts = outcome.sumOfBetPayouts.safeAdd(betParams.payout);
+                outcome.sumOfBetPayouts = outcome.sumOfBetPayouts.safeAdd(bet.payout);
                 
                 precedingOutcomeSubscript = outcomeSubscript;
             }
 
-            require(betParams.prob <= sumOfOutcomeProbs, REASON_BET_TOT_OUTCOME_PROB_NOT_ENOUGH);
+            require(bet.prob <= sumOfOutcomeProbs, REASON_BET_TOT_OUTCOME_PROB_NOT_ENOUGH);
 
             // prepare for next iteration
             precedingPlayer = bet.player;
@@ -178,23 +187,32 @@ contract BetMatching is GameAction, UsesRNG {
     );
 
 
-    function restructureMatchedBet(IERC20 token, uint256[10] betValues) internal pure returns (MatchedBet bet) {
-        return MatchedBet({
+    function restructureMatchedBet(IERC20 token, uint256[10] betValues) internal view returns (MatchedBet bet) {
+        bet = MatchedBet({
             player: betValues[0].safeToUint160(),
-            params: Bets.Params({
-                token: token,
-                stake: betValues[1],
-                payout: betValues[2],
-                prob: betValues[3].safeToUint32(),
-                expiry: betValues[4],
-                nonce: betValues[5]
-            }),
+            token: token,
+            stake: betValues[1],
+            payout: betValues[2],
+            prob: betValues[3].safeToUint32(),
+            expiry: betValues[4],
+            nonce: betValues[5],
             optionalSig: Signatures.Signature({
                 v: betValues[6].safeToUint8(),
                 r: bytes32(betValues[7]),
                 s: bytes32(betValues[8])
             }),
-            outcomeSubscripts: CustomUint8ArrayEncoding.decodeBytes32(bytes32(betValues[9]))
+            outcomeSubscripts: CustomUint8ArrayEncoding.decodeBytes32(bytes32(betValues[9])),
+            cachedBetHash: bytes32(0),
+            cachedBetId: bytes32(0)
+        });
+        (bet.cachedBetId, bet.cachedBetHash) = computeBetIdBetHashPair({
+            player: bet.player,
+            token: token,
+            stake: bet.stake,
+            payout: bet.payout,
+            prob: bet.prob,
+            expiry: bet.expiry,
+            nonce: bet.nonce
         });
     }
 
@@ -238,11 +256,10 @@ contract BetMatching is GameAction, UsesRNG {
             MatchedBet memory bet = bets[i];
 
             address player = bet.player;
-            Bets.Params memory betParams = bet.params;
 
-            require(maxEndTimestamp < betParams.expiry, REASON_BET_EXPIRY_NOT_AFTER_GAME_EXPIRY);
+            require(maxEndTimestamp < bet.expiry, REASON_BET_EXPIRY_NOT_AFTER_GAME_EXPIRY);
 
-            bytes32 betId = bet.params.getIdForPlayer(player);
+            bytes32 betId = bet.cachedBetId;
             
             StoredBetInfo storage storedBetInfo = getPlayerBetStorage(player, betId);
 
@@ -259,13 +276,17 @@ contract BetMatching is GameAction, UsesRNG {
                 // If the bet is Unknown, there must be a corresponding
                 // valid signature.
                 require(
-                    // ToDo: We are re-calculating hash (already calculated it during getIdForPlayer)
-                    bet.optionalSig.recoverSignerForHash(betParams.getHashForSigning()) == player,
+                    bet.optionalSig.recoverSignerForHash(bet.cachedBetHash) == player,
                     REASON_SIGNATURE_INVALID
                 );
                 // Note: If this transaction reverts, it may or may not contain a reason
                 // string (and most probably not)
-                bet.params.untrustedSafeTransferStakeFromPlayer(player);
+
+                bet.token.safeTransferFrom({
+                    _from: bet.player,
+                    _to: address(this),
+                    _value: bet.stake
+                });
             } else {
                 revert(REASON_BET_IN_NON_MATCHABLE_STATE);
             }
@@ -359,9 +380,6 @@ contract BetMatching is GameAction, UsesRNG {
 
             MatchedBet memory bet = bets[i];
 
-            // ToDo: Cache these
-            bytes32 betId = bet.params.getIdForPlayer(bet.player);
-
             bytes memory outcomeSubscripts = bet.outcomeSubscripts;
 
             for (uint256 j = 0; j < outcomeSubscripts.length; j++) {
@@ -370,19 +388,19 @@ contract BetMatching is GameAction, UsesRNG {
                     player: bet.player,
                     minResult: outcome.minResult,
                     maxResult: outcome.maxResult,
-                    payout: bet.params.payout
+                    payout: bet.payout
                 });
             }
 
             // ToDo: Ensure that this is compiled to a single SSTORE
-            StoredBetInfo storage playerBetStorage = getPlayerBetStorage(bet.player, betId);
+            StoredBetInfo storage playerBetStorage = getPlayerBetStorage(bet.player, bet.cachedBetId);
             playerBetStorage.state = BetState.Matched;
             playerBetStorage.matchedGameId = gameId248;
 
             emit BetMatched({
-                betId: betId,
+                betId: bet.cachedBetId,
                 betOwner: bet.player,
-                payout: bet.params.payout,
+                payout: bet.payout,
                 outcomeSubscripts: outcomeSubscripts
             });
         }
@@ -400,11 +418,14 @@ contract BetMatching is GameAction, UsesRNG {
         require(msg.sender == address(storedRNG), REASON_ONLY_PREDETERMINED_RNG_MAY_CALL_BACK);
         Game storage storedGame = storedGames[gameId];
         require(storedGame.state == GameState.RNGRequestSent, REASON_GAME_NOT_WAITING_FOR_RESPONSE);
-        // An RNG respecting the interface should never respond after maxEndTimestamp
-        assert(block.timestamp <= storedGame.maxEndTimestamp);
-        storedGame.state == GameState.RNGResponseReceived;
-        storedGame.generatedRandomNumber = generatedRandomNumber;
-        emit GameEndedOk(gameId);
+        if(block.timestamp <= storedGame.maxEndTimestamp) {
+            storedGame.state == GameState.RNGResponseReceived;
+            storedGame.generatedRandomNumber = generatedRandomNumber;
+            emit GameEndedOk(gameId);
+        } else {
+            storedGame.state == GameState.RNGResponseTimedOut;
+            emit GameEndedError(gameId);
+        }
     }
 
     event GameEndedError(uint256 indexed gameId);

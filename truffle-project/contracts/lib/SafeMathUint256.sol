@@ -18,15 +18,6 @@ library SafeMathUint256 {
         return c;
     }
 
-    function safeMul(uint256 a, uint256 b) internal pure returns (uint256 c) {
-        if (a == 0) {
-            return 0;
-        }
-        c = a * b;
-        assert(c / a == b);
-        return c;
-    }
-
     function safeToUint8(uint256 a) internal pure returns (uint8) {
         require(a <= MAX_UINT8);
         return uint8(a);

@@ -23,6 +23,11 @@ The following are the key properties of the ERC20BET system:
 * The contract owner has no control over funds, and it gives no special rights to a person who _executes_ a game. If a user wants to profit, he needs to play in his own game, so to speak.
 
 
+Contract organization
+---------------------
+
+![Contract inheritance structure](https://docs.google.com/drawings/d/e/2PACX-1vS3cki51k0AfUoiYUB4jIrhLg7lT7c6YtX0e11mvJwup5EBS-V2cUtlRlNsnfdaNUn93DR4ga67mQKO/pub?w=1163&h=733)
+
 User stories
 ------------
 
@@ -258,3 +263,108 @@ RNG.sol is an abstract contract defining the services of a Random Number Generat
 * It is abstract so that it can be concerned with the higher-level behaviour and constraints of how an RNG should work, without defining the actual implementation. This allows the concrete contracts extending the RNG contract to focus on the specific RNG implementation. It allows us to implement different RNG implementations for different scenarios. E.g. in our codebase, we implement 2 RNG implementations:
   - OraclizeRNG
   - TrustedRNG, which we use for testing
+
+
+
+Tests
+-----
+
+* Try and match different tokens to each other.
+* Test all reverts.
+
+
+
+
+    /**
+     * @dev Executes a game.
+     *
+     * Example 1
+     * ---------
+     *
+     * Consider the following 2 bets:
+     *
+     *     bet    stake payout prob
+     *     ---- ----- ------ ----
+     *        b0     10     40    ¼
+     *        b1     10     40    ¼
+     *        b2     20     40    ½
+     *
+     * All the numbers add up, so as long as each player’s allowance covers
+     * his stake, the bets are signed by their owners, and they are not expired,
+     * we’re good to go.
+     *
+     * This bet could be matched as follows in a game with two
+     * outcomes, o0 and 01:
+     *
+     *     bet    o0    o1
+     *     --- --- --- 
+     *        b0     T     ·     ∑=¼ ✓
+     *        b1     T     ·     ∑=¼ ✓
+     *        b2     ·     T     ∑=½ ✓
+     *         p=½ p=½
+     *             ½ + ½ = 1
+     *
+     * T means Ticket.
+     *
+     * outcomeProbs = [0x80000000, 0x80000000]
+     *                 P(o0)=½     P(o1)=½
+     *
+     *                                 b    o
+     * ticketBetOutcomeSubscriptPairArrays = [[0, 0],
+     *                                        [1, 0],
+     *                                        [2, 1]]
+     *
+     * Example 2
+     * ---------
+     *
+     * Consider the following 3 bets:
+     *
+     *     bet    stake payout prob
+     *     ---- ----- ------ ----
+     *        b0     20     30    ⅔
+     *        b1     20     30    ⅔
+     *        b2     20     30    ⅔
+     *
+     * It might seem unlikely, but these 3 bets could be matched to each other
+     * in a game of 3 outcomes, as follows:
+     *
+     *     bet    o0    o1    o2
+     *     --- --- --- ---
+     *        b0     T     T     ·    ∑=⅔ ✓
+     *        b1     T     ·     T    ∑=⅔ ✓
+     *        b2     ·     T     T    ∑=⅔ ✓
+     *         p=⅓ p=⅓ p=⅓
+     *             ⅓ + ⅓ + ⅓ = 1
+     *
+     * These values would be serialized as follows:
+     *
+     *     outcomeProbs = [0x55555555, 0x55555555, 0x55555556]
+     *                     P(o0)≈⅓     P(o1)≈⅓     P(o2)≈⅓
+     *
+     *     ticketOutcomeSubscripts = [0, 1,    0, 2,    1, 2]
+     *                                ----     ----     ----
+     *                                b0     b1     b2
+     *
+     * In case you were wondering about what the bet probabilities would be,
+     * because of the slight inaccuracy because of the ⅓,
+     * they would be passed as:
+     *
+     *         desired p     actual p     
+     *    ---    ----------    -------------------------------------------------
+     *     b0    0xaaaaaaaa    0x55555555 + 0x55555555                = 0xaaaaaaaa
+     *     b1    0xaaaaaaaa                 0x55555555 + 0x55555556 = 0xaaaaaaab
+     *     b2    0xaaaaaaaa                 0x55555555 + 0x55555556 = 0xaaaaaaab
+     *
+     * So b1 and b2 have a slight advantage, to the detriment of b0. Such inaccuracies aren't going to
+     * have a significant impact on the fairness of the game, but it is important to analyse such edge cases
+     * to ensure that the numbers will add up and all constraints imposed by the smart contract
+     * are satisfied.
+     * 
+     */
+
+
+Contracts are used as Mixins.
+
+
+
+Goal of contract is to allow free market to operate.

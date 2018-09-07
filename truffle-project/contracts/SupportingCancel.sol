@@ -1,10 +1,10 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import "./Base.sol";
+import "./UsingBetStorage.sol";
 
 
-contract BetCancellation is Base {
+contract SupportingCancel is UsingBetStorage {
 
     string constant REASON_ONLY_PLACED_BET_CAN_BE_CANCELLED = "REASON_ONLY_PLACED_BET_CAN_BE_CANCELLED";
 

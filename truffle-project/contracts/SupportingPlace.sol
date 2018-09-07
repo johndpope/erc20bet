@@ -1,11 +1,11 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import "./Base.sol";
-import "./UsesWETH.sol";
+import "./UsingBetStorage.sol";
+import "./UsingWETH.sol";
 
 
-contract BetPlacement is Base, UsesWETH {
+contract SupportingPlace is UsingBetStorage, UsingWETH {
 
     string constant REASON_ONLY_UNKNOWN_BET_CAN_BE_PLACED = "REASON_ONLY_UNKNOWN_BET_CAN_BE_PLACED";
 
@@ -34,38 +34,6 @@ contract BetPlacement is Base, UsesWETH {
     /// @notice Place a bet on the blockchain.
     /// @dev This will attribute the bet to `msg.sender`. Later, when it is matched,
     /// there will be no need for it to be signed with a further ECDSA signature.
-    function placeBet(Bets.Params params) internal {
-        address player = msg.sender;
-        bytes32 betId = params.getIdForPlayer(player);
-        StoredBetInfo storage storedBetInfo = getPlayerBetStorage(player, betId);
-        require(storedBetInfo.state == BetState.Unknown, REASON_ONLY_UNKNOWN_BET_CAN_BE_PLACED);
-        storedBetInfo.state = BetState.Placed;
-
-        // ToDo: Split placeBet into 2 functions, so we don't have to read address from
-        // storage and test it every time.
-        // and check check every time
-        if (address(params.token) == address(storedWETHToken)) {
-            // ToDo: Analyse well for reentrancy
-            storedWETHToken.deposit.value(params.stake)();
-        } else {
-            params.token.safeTransferFrom({
-                _from: player,
-                _to: address(this),
-                _value: params.stake
-            });
-        }
-        emit BetPlaced({
-            owner: player,
-            betId: betId,
-            token: params.token,
-            stake: params.stake,
-            payout: params.payout,
-            prob: params.prob,
-            expiry: params.expiry,
-            nonce: params.nonce
-        });
-    }
-
     function placeBet(
         IERC20 token,
         uint256 stake,
@@ -74,18 +42,47 @@ contract BetPlacement is Base, UsesWETH {
         uint256 expiry,
         uint256 nonce
     )
-        external
+        public
     {
-        placeBet(
-            Bets.Params({
-                token: token,
-                stake: stake,
-                payout: payout,
-                prob: prob,
-                expiry: expiry,
-                nonce: nonce
-            })
-        );
+        address player = msg.sender;
+        
+        (bytes32 betId,) = computeBetIdBetHashPair({
+            player: player,
+            token: token,
+            stake: stake,
+            payout: payout,
+            prob: prob,
+            expiry: expiry,
+            nonce: nonce
+        });
+        
+        StoredBetInfo storage storedBetInfo = getPlayerBetStorage(player, betId);
+        require(storedBetInfo.state == BetState.Unknown, REASON_ONLY_UNKNOWN_BET_CAN_BE_PLACED);
+        storedBetInfo.state = BetState.Placed;
+
+        // ToDo: Split placeBet into 2 functions, so we don't have to read address from
+        // storage and test it every time.
+        // and check check every time
+        if (address(token) == address(storedWETHToken)) {
+            // ToDo: Analyse well for reentrancy
+            storedWETHToken.deposit.value(stake)();
+        } else {
+            token.safeTransferFrom({
+                _from: player,
+                _to: address(this),
+                _value: stake
+            });
+        }
+        emit BetPlaced({
+            owner: player,
+            betId: betId,
+            token: token,
+            stake: stake,
+            payout: payout,
+            prob: prob,
+            expiry: expiry,
+            nonce: nonce
+        });
     }
 
     /// @notice Send the stake in Ether to this function to place a bet
@@ -100,16 +97,14 @@ contract BetPlacement is Base, UsesWETH {
         external
         payable
     {
-        placeBet(
-            Bets.Params({
-                token: storedWETHToken,
-                stake: msg.value,
-                payout: payout,
-                prob: prob,
-                expiry: expiry,
-                nonce: nonce
-            })
-        );
+        placeBet({
+            token: storedWETHToken,
+            stake: msg.value,
+            payout: payout,
+            prob: prob,
+            expiry: expiry,
+            nonce: nonce
+        });
     }
 
 }
