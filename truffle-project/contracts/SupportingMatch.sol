@@ -8,7 +8,7 @@ import "./lib/CustomUint8ArrayEncoding.sol";
 
 import "./UsingBetStorage.sol";
 import "./UsingGameStorage.sol";
-import "./UsingRNG.sol";
+import "./rng/UsingRNG.sol";
 
 
 contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
@@ -343,7 +343,7 @@ contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
 
         // ToDo: Investigate what would happen if the function requestRandomNumber, while being evaluated,
         // called back into some other function in this contract.
-        storedRNG.sendRNGRequest({ requestId: gameId });
+        sendRequestToRNG({ _requestId: gameId });
 
         // Note: We set this after calling requestRandomNumber, so if it accidentally called back into the
         // IRNGClient methods, it would be blocked because the game state would still be `Unknown`.
@@ -408,14 +408,12 @@ contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
         return MerkleTree.computeRoot(ticketHashes);
     }
 
-    string constant REASON_ONLY_PREDETERMINED_RNG_MAY_CALL_BACK = "REASON_ONLY_PREDETERMINED_RNG_MAY_CALL_BACK";
     string constant REASON_GAME_NOT_WAITING_FOR_RESPONSE = "REASON_GAME_NOT_WAITING_FOR_RESPONSE";
     string constant REASON_GAME_NOT_YET_EXPIRED = "REASON_GAME_NOT_YET_EXPIRED";
 
     event GameEndedOk(uint256 indexed gameId);
 
-    function handleRNGResponse(uint256 gameId, uint32 generatedRandomNumber) public {
-        require(msg.sender == address(storedRNG), REASON_ONLY_PREDETERMINED_RNG_MAY_CALL_BACK);
+    function handleResponseFromRNG(uint256 gameId, uint32 generatedRandomNumber) internal {
         Game storage storedGame = storedGames[gameId];
         require(storedGame.state == GameState.RNGRequestSent, REASON_GAME_NOT_WAITING_FOR_RESPONSE);
         if(block.timestamp <= storedGame.maxEndTimestamp) {

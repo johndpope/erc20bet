@@ -1,8 +1,8 @@
 pragma solidity ^0.4.24;
 pragma experimental "v0.5.0";
 
-import "./IRNG.sol";
-import "./IRNGFactory.sol";
+import "../IRNGFactory.sol";
+
 import "./TrustedRNG.sol";
 
 
