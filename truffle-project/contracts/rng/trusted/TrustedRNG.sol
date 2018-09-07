@@ -6,7 +6,7 @@ import "../RNG.sol";
 
 contract TrustedRNG is RNG {
 
-    string constant REASON_MSG_SENDER_UNAUTHORIZED = "REASON_MSG_SENDER_UNAUTHORIZED";
+    string constant REASON_MSG_SENDER_NOT_TRUSTED_RNG_OWNER = "REASON_MSG_SENDER_NOT_TRUSTED_RNG_OWNER";
 
     address public trustedOwner;
 
@@ -21,7 +21,7 @@ contract TrustedRNG is RNG {
     }
 
     function handleTrustedRNGResponse(uint256 requestId, uint32 number) external {
-        require(msg.sender == trustedOwner, REASON_MSG_SENDER_UNAUTHORIZED);
+        require(msg.sender == trustedOwner, REASON_MSG_SENDER_NOT_TRUSTED_RNG_OWNER);
         sendResponseToClient(requestId, number);
     }
 

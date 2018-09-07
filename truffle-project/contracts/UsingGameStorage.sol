@@ -27,13 +27,15 @@ contract UsingGameStorage {
 
     mapping (uint256 => Game) public storedGames;
 
+    /// @dev ToDo: Write note about why there isn't betId in hash (player unique)
+    /// Note: It is public only for convenience, otherwise it could be just internal.
     function computeTicketHash(
         address player,
         uint32 minResult,
         uint32 maxResult,
         uint256 payout
     )
-        internal
+        public
         pure
         returns (
             bytes32

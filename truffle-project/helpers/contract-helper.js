@@ -60,7 +60,9 @@ export const getAllContractEventsForTx = async (contracts, receipt) => {
   const unaccountedFor = receipt.logs.length - events.length
   if (unaccountedFor !== 0) {
     throw new Error(
-      `${unaccountedFor} logs unaccounted for - are you sure you passed all contracts that emitted events in that transaction?`
+      `${unaccountedFor} out of ${
+        receipt.logs.length
+      } logs unaccounted for - are you sure you passed all contracts that emitted events in that transaction?`
     )
   }
   return events

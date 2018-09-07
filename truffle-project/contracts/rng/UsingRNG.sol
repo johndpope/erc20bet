@@ -8,8 +8,13 @@ import "./IRNG.sol";
 contract UsingRNG is IRNGClient {
 
     string constant REASON_MSG_SENDER_UNAUTHORIZED = "REASON_MSG_SENDER_UNAUTHORIZED";
-    
+
     IRNG private rng;
+
+    /// @dev Informational
+    function infoRNGAddress() external view returns (address) {
+        return address(rng);
+    }
 
     constructor(IRNGFactory _rngFactory) internal {
         rng = _rngFactory.createRNG(this);

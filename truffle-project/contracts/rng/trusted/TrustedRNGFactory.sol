@@ -8,10 +8,17 @@ import "./TrustedRNG.sol";
 
 contract TrustedRNGFactory is IRNGFactory {
 
+    address trustedOwner;
+
+    constructor() public {
+        trustedOwner = msg.sender;
+    }
+
+    /// @dev Creates a TrustedRNG that can only be called by the owner of this factory.
     function createRNG(IRNGClient client) public returns (IRNG rng) {
         return new TrustedRNG({
             _client: client,
-            _trustedOwner: msg.sender
+            _trustedOwner: trustedOwner
         });
     }
 

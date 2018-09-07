@@ -26,7 +26,7 @@ The following are the key properties of the ERC20BET system:
 Contract organization
 ---------------------
 
-![Contract inheritance structure](https://docs.google.com/drawings/d/e/2PACX-1vS3cki51k0AfUoiYUB4jIrhLg7lT7c6YtX0e11mvJwup5EBS-V2cUtlRlNsnfdaNUn93DR4ga67mQKO/pub?w=1163&h=733)
+![Contract inheritance structure: https://docs.google.com/drawings/d/e/2PACX-1vS3cki51k0AfUoiYUB4jIrhLg7lT7c6YtX0e11mvJwup5EBS-V2cUtlRlNsnfdaNUn93DR4ga67mQKO/pub?w=1163&h=733](./contract-organization.png)
 
 User stories
 ------------

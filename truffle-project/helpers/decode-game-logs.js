@@ -1,6 +1,6 @@
+import { buildMerkleTree } from 'openzeppelin-solidity/test/helpers/merkleTree'
 import { zip } from './arrays'
 import { BN_ZERO } from './contract-helper'
-import { buildMerkleTree } from './merkle-trees'
 
 const reconstructTicketsFromGameLogs = allEvents => {
   const [{ gameId, outcomeProbs, ticketHashes, ticketOutcomeSubscripts }] = allEvents

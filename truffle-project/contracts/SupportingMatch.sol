@@ -26,7 +26,7 @@ contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
     string constant REASON_PLACED_BET_SHOULD_HAVE_NO_SIGNATURE = "REASON_PLACED_BET_SHOULD_HAVE_NO_SIGNATURE";
     string constant REASON_SIGNATURE_INVALID = "REASON_SIGNATURE_INVALID";
     string constant REASON_BET_IN_NON_MATCHABLE_STATE = "REASON_BET_IN_NON_MATCHABLE_STATE";
-    string constant REASON_BET_EXPIRY_NOT_AFTER_GAME_EXPIRY = "REASON_BET_EXPIRY_NOT_AFTER_GAME_EXPIRY";
+    string constant REASON_BET_MIGHT_EXPIRE_BEFORE_GAME_EXPIRES = "REASON_BET_MIGHT_EXPIRE_BEFORE_GAME_EXPIRES";
 
     string constant REASON_GAME_TOO_FEW_BETS = "REASON_GAME_TOO_FEW_BETS";
     string constant REASON_GAME_TOO_FEW_OUTCOMES = "REASON_GAME_TOO_FEW_OUTCOMES";
@@ -257,7 +257,7 @@ contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
 
             address player = bet.player;
 
-            require(maxEndTimestamp < bet.expiry, REASON_BET_EXPIRY_NOT_AFTER_GAME_EXPIRY);
+            require(maxEndTimestamp <= bet.expiry, REASON_BET_MIGHT_EXPIRE_BEFORE_GAME_EXPIRES);
 
             bytes32 betId = bet.cachedBetId;
             
@@ -412,28 +412,27 @@ contract SupportingMatch is UsingBetStorage, UsingGameStorage, UsingRNG {
     string constant REASON_GAME_NOT_YET_EXPIRED = "REASON_GAME_NOT_YET_EXPIRED";
 
     event GameEndedOk(uint256 indexed gameId);
+    event GameEndedError(uint256 indexed gameId);
 
     function handleResponseFromRNG(uint256 gameId, uint32 generatedRandomNumber) internal {
         Game storage storedGame = storedGames[gameId];
         require(storedGame.state == GameState.RNGRequestSent, REASON_GAME_NOT_WAITING_FOR_RESPONSE);
         if(block.timestamp <= storedGame.maxEndTimestamp) {
-            storedGame.state == GameState.RNGResponseReceived;
+            storedGame.state = GameState.RNGResponseReceived;
             storedGame.generatedRandomNumber = generatedRandomNumber;
             emit GameEndedOk(gameId);
         } else {
-            storedGame.state == GameState.RNGResponseTimedOut;
+            storedGame.state = GameState.RNGResponseTimedOut;
             emit GameEndedError(gameId);
         }
     }
-
-    event GameEndedError(uint256 indexed gameId);
 
     /// @dev May be called by anyone
     function alertRNGTimeout(uint256 gameId) public {
         Game storage storedGame = storedGames[gameId];
         require(storedGame.state == GameState.RNGRequestSent, REASON_GAME_NOT_WAITING_FOR_RESPONSE);
         require(storedGame.maxEndTimestamp < block.timestamp, REASON_GAME_NOT_YET_EXPIRED);
-        storedGame.state == GameState.RNGResponseTimedOut;
+        storedGame.state = GameState.RNGResponseTimedOut;
         emit GameEndedError(gameId);
     }
 

@@ -51,6 +51,13 @@ contract UsingBetStorage {
         return storedBetInfos[keccak256(abi.encodePacked(player, betId))];
     }
 
+    /// @dev Just for informational purposes and testing.
+    function getBetInfo(bytes32 betId) external view returns (BetState state, uint256 matchedGameId) {
+        StoredBetInfo storage storedBetInfo = getPlayerBetStorage(msg.sender, betId);
+        state = storedBetInfo.state;
+        matchedGameId = storedBetInfo.matchedGameId;
+    }
+
     bytes32 private constant TYPES_HASH = keccak256(
         abi.encodePacked(
             "address token",
